@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Org Chart Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">CAROLINEART</p>
+      <h1>Org Chart Studio</h1>
+      <p class="subtitle">Paste the hierarchy once. Generate a summary plus one detail image per leader.</p>
+    </div>
+    <div class="header-actions">
+      <button id="saveBtn" class="secondary">Save locally</button>
+      <button id="loadBtn" class="secondary">Load saved</button>
+      <button id="generateBtn" class="primary">Generate charts</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel controls">
+      <section>
+        <div class="section-title-row">
+          <h2>1. Team structure</h2>
+          <button id="exampleBtn" class="text-button">Load example</button>
+        </div>
+        <p class="help">Indent with 2 spaces per level. Separate name, title, and responsibility with a vertical bar.</p>
+        <textarea id="orgInput" spellcheck="false" aria-label="Team structure"></textarea>
+        <details>
+          <summary>Input format</summary>
+          <pre>Yan Wang | SVP, Product | Product strategy and portfolio leadership
+  Director One | Director, Product | Digital product delivery
+    Report One | Manager, Product | Member experience
+    Report Two | Senior Product Manager | Platform roadmap</pre>
+        </details>
+      </section>
+
+      <section>
+        <h2>2. Brand and layout</h2>
+        <div class="field-grid">
+          <label>
+            Primary
+            <span class="color-row">
+              <input id="primaryColor" type="color" value="#00544E" aria-label="Primary color picker">
+              <input id="primaryHex" type="text" value="#00544E" maxlength="7" spellcheck="false" aria-label="Primary color hex code">
+            </span>
+          </label>
+
+          <label>
+            Accent 1
+            <span class="color-row">
+              <input id="accent1" type="color" value="#9DC6D7" aria-label="Accent 1 color picker">
+              <input id="accent1Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 1 color hex code">
+            </span>
+          </label>
+
+          <label>
+            Accent 2
+            <span class="color-row">
+              <input id="accent2" type="color" value="#9DC6D7" aria-label="Accent 2 color picker">
+              <input id="accent2Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 2 color hex code">
+            </span>
+          </label>
+
+          <label>
+            Background
+            <span class="color-row">
+              <input id="backgroundColor" type="color" value="#F6F7F9" aria-label="Background color picker">
+              <input id="backgroundHex" type="text" value="#F6F7F9" maxlength="7" spellcheck="false" aria-label="Background color hex code">
+            </span>
+          </label>
+        </div>
+
+        <label class="stacked">
+          Font
+          <select id="fontFamily">
+            <option value="Arial, Helvetica, sans-serif">Arial</option>
+            <option value="Aptos, Arial, sans-serif">Aptos</option>
+            <option value="Verdana, Arial, sans-serif">Verdana</option>
+            <option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option>
+          </select>
+        </label>
+
+        <label class="stacked">
+          Cards per detail image
+          <select id="cardsPerPage">
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+          </select>
+        </label>
+
+        <label class="stacked">
+          Columns
+          <select id="columnCount">
+            <option value="auto" selected>Auto</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+
+        <label class="check">
+          <input id="countAllDescendants" type="checkbox" checked>
+          Staff count includes all descendants
+        </label>
+      </section>
+    </aside>
+
+    <section class="panel output-panel">
+      <div class="output-toolbar">
+        <div>
+          <h2>Generated images</h2>
+          <p id="status" class="help">Nothing generated yet.</p>
+        </div>
+        <button id="downloadAllBtn" class="secondary" disabled>Download all SVGs</button>
+      </div>
+
+      <div id="warnings" class="warnings" hidden></div>
+
+      <div id="gallery" class="gallery empty-state">
+        <div>
+          <strong>Your charts will appear here.</strong>
+          <p>Summary first, then each leader's direct-report view.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
