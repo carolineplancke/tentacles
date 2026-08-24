@@ -26,6 +26,20 @@ const elements = {
   allBtn: $('#downloadAllBtn')
 };
 
+// Every export is a fixed 37.68 cm x 23.12 cm page so the images drop into the
+// same slide placeholder. SVG user units are 1/96 inch, giving 1424 x 874 px.
+const PAGE_WIDTH_CM = 37.68;
+const PAGE_HEIGHT_CM = 23.12;
+const PX_PER_CM = 96 / 2.54;
+
+const PAGE_WIDTH = Math.round(
+  PAGE_WIDTH_CM * PX_PER_CM
+);
+
+const PAGE_HEIGHT = Math.round(
+  PAGE_HEIGHT_CM * PX_PER_CM
+);
+
 const EXAMPLE = `Yan Wang | SVP, Product | Product strategy, portfolio leadership and enterprise alignment
   Caroline Plancke | EA, Product | Executive operations and coordination
   Sovan Sahu | VP, Data & Analytics | Data strategy, governance, engineering and analytics
@@ -213,15 +227,15 @@ function settings() {
   };
 }
 
-function svgShell(width, height, body) {
+function svgShell(body) {
   const currentSettings = settings();
 
   return `
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="${width}"
-      height="${height}"
-      viewBox="0 0 ${width} ${height}"
+      width="${PAGE_WIDTH_CM}cm"
+      height="${PAGE_HEIGHT_CM}cm"
+      viewBox="0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}"
       role="img"
     >
       <rect
@@ -234,6 +248,24 @@ function svgShell(width, height, body) {
         ${body}
       </g>
     </svg>
+  `;
+}
+
+function fitToPage(body, layoutWidth, layoutHeight) {
+  const scale = Math.min(
+    PAGE_WIDTH / layoutWidth,
+    PAGE_HEIGHT / layoutHeight
+  );
+
+  const offsetX =
+    (PAGE_WIDTH - layoutWidth * scale) / 2;
+
+  return `
+    <g
+      transform="translate(${offsetX.toFixed(2)}, 0) scale(${scale.toFixed(5)})"
+    >
+      ${body}
+    </g>
   `;
 }
 
@@ -421,6 +453,7 @@ function makePage(leader, children, label) {
   const cardWidth = 320;
   const cardHeight = 300;
   const gap = 12;
+  const rowGap = 18;
   const margin = 54;
   const cardStartY = 196;
 
@@ -428,21 +461,28 @@ function makePage(leader, children, label) {
     children.length / columns
   );
 
-  const width = Math.max(
-    900,
-    margin * 2 +
-      columns * cardWidth +
-      (columns - 1) * gap
+  const gridWidth =
+    columns * cardWidth +
+    (columns - 1) * gap;
+
+  const layoutWidth = Math.max(
+    PAGE_WIDTH,
+    margin * 2 + gridWidth
   );
 
-  const height =
+  const layoutHeight = Math.max(
+    PAGE_HEIGHT,
     cardStartY +
-    rows * (cardHeight + 18) +
-    42;
+      rows * (cardHeight + rowGap) +
+      42
+  );
+
+  const startX =
+    (layoutWidth - gridWidth) / 2;
 
   let body = leaderBanner(
     leader,
-    width
+    layoutWidth
   );
 
   children.forEach((node, index) => {
@@ -450,12 +490,12 @@ function makePage(leader, children, label) {
     const row = Math.floor(index / columns);
 
     const x =
-      margin +
+      startX +
       column * (cardWidth + gap);
 
     const y =
       cardStartY +
-      row * (cardHeight + 18);
+      row * (cardHeight + rowGap);
 
     body += card(
       node,
@@ -469,9 +509,15 @@ function makePage(leader, children, label) {
 
   return {
     name: label,
-    svg: svgShell(width, height, body),
-    width,
-    height
+    svg: svgShell(
+      fitToPage(
+        body,
+        layoutWidth,
+        layoutHeight
+      )
+    ),
+    width: PAGE_WIDTH,
+    height: PAGE_HEIGHT
   };
 }
 
@@ -627,7 +673,9 @@ function svgToPng(page) {
     context.drawImage(
       image,
       0,
-      0
+      0,
+      page.width,
+      page.height
     );
 
     URL.revokeObjectURL(url);
@@ -772,7 +820,7 @@ function render() {
       currentPages.length === 1
         ? ''
         : 's'
-    } generated.`;
+    } generated at ${PAGE_WIDTH_CM} × ${PAGE_HEIGHT_CM} cm.`;
 
   elements.allBtn.disabled = false;
 
