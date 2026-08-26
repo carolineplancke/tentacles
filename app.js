@@ -1,5 +1,11 @@
+// Tentacles org-chart studio
+// Flow: parse the textarea -> build one SVG page per leader slice -> show them
+// in #gallery. Individual SVG/PNG buttons and "download all as ZIP" live at the
+// bottom of this file.
+
 const $ = selector => document.querySelector(selector);
 
+// Cached DOM nodes from index.html (ids must stay in sync with the markup).
 const elements = {
   input: $('#orgInput'),
   gallery: $('#gallery'),
@@ -39,6 +45,10 @@ const PAGE_HEIGHT = Math.round(
   PAGE_HEIGHT_CM * PX_PER_CM
 );
 
+// Must match the selected <option> on #cardsPerPage in index.html.
+const DEFAULT_CARDS_PER_PAGE = 12;
+
+// Sample hierarchy used on first load and by "Load example".
 const EXAMPLE = `Yan Wang | SVP, Product | Product strategy, portfolio leadership and enterprise alignment
   Caroline Plancke | EA, Product | Executive operations and coordination
   Sovan Sahu | VP, Data & Analytics | Data strategy, governance, engineering and analytics
@@ -55,6 +65,7 @@ const EXAMPLE = `Yan Wang | SVP, Product | Product strategy, portfolio leadershi
       Direct Two | Product Analyst | Product insights
     Report Three | Product Manager | Partner experience`;
 
+// Turn indented "Name | Title | Responsibility" lines into a tree.
 function parseOrg(text) {
   const lines = text
     .split(/\r?\n/)
@@ -119,6 +130,7 @@ function parseOrg(text) {
   };
 }
 
+// People below a node, recursively (used when "all descendants" is checked).
 function descendants(node) {
   return node.children.reduce(
     (total, child) => total + 1 + descendants(child),
@@ -126,12 +138,14 @@ function descendants(node) {
   );
 }
 
+// Direct reports, or all descendants, depending on the checkbox.
 function countStaff(node) {
   return elements.allDesc.checked
     ? descendants(node)
     : node.children.length;
 }
 
+// Escape text before inserting it into SVG/HTML.
 function esc(value = '') {
   return String(value).replace(
     /[&<>"']/g,
@@ -145,6 +159,7 @@ function esc(value = '') {
   );
 }
 
+// Word-wrap a string to at most 3 lines for card text.
 function wrap(text, maxCharacters = 34) {
   const words = String(text || '')
     .split(/\s+/)
@@ -176,6 +191,7 @@ function wrap(text, maxCharacters = 34) {
   return lines.slice(0, 3);
 }
 
+// SVG <text> with one <tspan> per wrapped line.
 function textLines(
   lines,
   x,
@@ -216,6 +232,7 @@ function textLines(
   `;
 }
 
+// Live color / font values from the left-hand controls.
 function settings() {
   return {
     primary: elements.primary.value,
@@ -226,6 +243,7 @@ function settings() {
   };
 }
 
+// Outer SVG page: fixed slide size, background, font family.
 function svgShell(body) {
   const currentSettings = settings();
 
@@ -250,6 +268,7 @@ function svgShell(body) {
   `;
 }
 
+// Scale and center a layout that is larger than the fixed page.
 function fitToPage(body, layoutWidth, layoutHeight) {
   const scale = Math.min(
     PAGE_WIDTH / layoutWidth,
@@ -268,6 +287,7 @@ function fitToPage(body, layoutWidth, layoutHeight) {
   `;
 }
 
+// Teal banner at the top of a chart: leader name + job title only.
 function leaderBanner(node, width, y = 40) {
   const currentSettings = settings();
 
@@ -306,6 +326,7 @@ function leaderBanner(node, width, y = 40) {
   `;
 }
 
+// One white report card: accent bar, numbered header, name, title, staff count.
 function card(node, x, y, width, height, index) {
   const currentSettings = settings();
 
@@ -402,6 +423,7 @@ function card(node, x, y, width, height, index) {
   `;
 }
 
+// Column count: the dropdown, or an auto layout based on how many cards.
 function calculateColumns(numberOfChildren) {
   const selectedValue = elements.cols
     ? elements.cols.value
@@ -433,6 +455,7 @@ function calculateColumns(numberOfChildren) {
   return 6;
 }
 
+// Compose one full chart: banner + grid of report cards, then fit to the page.
 function makePage(leader, children, label) {
   const columns = calculateColumns(children.length);
 
@@ -507,6 +530,7 @@ function makePage(leader, children, label) {
   };
 }
 
+// Every person who has direct reports (used to build detail pages).
 function flattenLeaders(nodes, output = []) {
   nodes.forEach(node => {
     if (node.children.length) {
@@ -522,6 +546,7 @@ function flattenLeaders(nodes, output = []) {
   return output;
 }
 
+// Summary page(s) for each root, then a detail page for every leader with reports.
 function buildCharts(roots) {
   if (!roots.length) {
     return [];
@@ -600,6 +625,7 @@ function buildCharts(roots) {
   return pages;
 }
 
+// Safe file-name fragment (summary.svg, sovan-sahu.svg, …).
 function slug(value) {
   return String(value)
     .toLowerCase()
@@ -608,6 +634,7 @@ function slug(value) {
     'org-chart';
 }
 
+// Trigger a single-file browser download.
 function download(blob, fileName) {
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
@@ -624,6 +651,7 @@ function download(blob, fileName) {
   }, 1000);
 }
 
+// SVG markup as a downloadable blob.
 function svgBlob(svg) {
   return new Blob(
     [svg],
@@ -633,6 +661,7 @@ function svgBlob(svg) {
   );
 }
 
+// ZIP helpers (STORE / uncompressed) so "download all" can ship a folder.
 const CRC32_TABLE = (() => {
   const table = new Uint32Array(256);
 
@@ -713,6 +742,7 @@ function zipDosDateTime(date = new Date()) {
   };
 }
 
+// Build a .zip whose entries live under folderName/ (e.g. org-charts/01-….svg).
 function zipFolder(files, folderName) {
   const encoder = new TextEncoder();
   const { time, day } = zipDosDateTime();
@@ -790,6 +820,7 @@ function zipFolder(files, folderName) {
   );
 }
 
+// Rasterize an SVG page to PNG via canvas (2x for sharper slides).
 function svgToPng(page) {
   const image = new Image();
   const url = URL.createObjectURL(
@@ -846,6 +877,7 @@ function svgToPng(page) {
   image.src = url;
 }
 
+// Copy picker values into the hex text fields.
 function updateHexFields() {
   if (elements.primaryHex) {
     elements.primaryHex.value =
@@ -868,6 +900,7 @@ function updateHexFields() {
   }
 }
 
+// Keep a color <input> and its hex text field in sync; re-render if charts exist.
 function syncColor(colorElement, hexElement) {
   if (!colorElement || !hexElement) {
     return;
@@ -917,6 +950,7 @@ function syncColor(colorElement, hexElement) {
 
 let currentPages = [];
 
+// Parse input, build SVGs, and paint the gallery.
 function render() {
   const parsed = parseOrg(
     elements.input.value
@@ -1003,6 +1037,8 @@ function render() {
       .join('');
 }
 
+// --- UI wiring ---
+
 $('#generateBtn').addEventListener(
   'click',
   render
@@ -1016,6 +1052,7 @@ $('#exampleBtn').addEventListener(
   }
 );
 
+// Store paste + colors + layout in localStorage under "orgChartStudio".
 $('#saveBtn').addEventListener(
   'click',
   () => {
@@ -1049,6 +1086,7 @@ $('#saveBtn').addEventListener(
   }
 );
 
+// Restore a previous save (falls back to DEFAULT_CARDS_PER_PAGE if older saves omit it).
 $('#loadBtn').addEventListener(
   'click',
   () => {
@@ -1086,7 +1124,7 @@ $('#loadBtn').addEventListener(
       elements.font.value;
 
     elements.perPage.value =
-      savedData.per || 6;
+      savedData.per || DEFAULT_CARDS_PER_PAGE;
 
     if (elements.cols) {
       elements.cols.value =
@@ -1101,6 +1139,7 @@ $('#loadBtn').addEventListener(
   }
 );
 
+// Per-chart SVG / PNG buttons (data-svg / data-png on each button).
 elements.gallery.addEventListener(
   'click',
   event => {
@@ -1129,6 +1168,7 @@ elements.gallery.addEventListener(
   }
 );
 
+// One zip: org-charts/01-….svg, 02-….svg, …
 elements.allBtn.addEventListener(
   'click',
   () => {
@@ -1153,6 +1193,7 @@ elements.allBtn.addEventListener(
   }
 );
 
+// Re-generate when font, cards-per-page, columns, or staff-count mode change.
 [
   elements.font,
   elements.perPage,
@@ -1191,6 +1232,7 @@ syncColor(
   elements.backgroundHex
 );
 
+// First paint: example hierarchy, then generate charts immediately.
 elements.input.value = EXAMPLE;
 
 updateHexFields();
