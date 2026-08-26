@@ -633,6 +633,163 @@ function svgBlob(svg) {
   );
 }
 
+const CRC32_TABLE = (() => {
+  const table = new Uint32Array(256);
+
+  for (let index = 0; index < 256; index++) {
+    let value = index;
+
+    for (let bit = 0; bit < 8; bit++) {
+      value = value & 1
+        ? (0xedb88320 ^ (value >>> 1))
+        : value >>> 1;
+    }
+
+    table[index] = value >>> 0;
+  }
+
+  return table;
+})();
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+
+  for (let index = 0; index < bytes.length; index++) {
+    crc =
+      CRC32_TABLE[(crc ^ bytes[index]) & 0xff] ^
+      (crc >>> 8);
+  }
+
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function zipUint16(value) {
+  return new Uint8Array([
+    value & 0xff,
+    (value >>> 8) & 0xff
+  ]);
+}
+
+function zipUint32(value) {
+  return new Uint8Array([
+    value & 0xff,
+    (value >>> 8) & 0xff,
+    (value >>> 16) & 0xff,
+    (value >>> 24) & 0xff
+  ]);
+}
+
+function concatBytes(parts) {
+  const size = parts.reduce(
+    (total, part) => total + part.length,
+    0
+  );
+
+  const output = new Uint8Array(size);
+  let offset = 0;
+
+  parts.forEach(part => {
+    output.set(part, offset);
+    offset += part.length;
+  });
+
+  return output;
+}
+
+function zipDosDateTime(date = new Date()) {
+  const time =
+    (date.getHours() << 11) |
+    (date.getMinutes() << 5) |
+    (date.getSeconds() >> 1);
+
+  const day =
+    ((date.getFullYear() - 1980) << 9) |
+    ((date.getMonth() + 1) << 5) |
+    date.getDate();
+
+  return {
+    time,
+    day
+  };
+}
+
+function zipFolder(files, folderName) {
+  const encoder = new TextEncoder();
+  const { time, day } = zipDosDateTime();
+  const prefix = `${folderName}/`;
+
+  const locals = [];
+  const centrals = [];
+  let offset = 0;
+
+  files.forEach(file => {
+    const nameBytes = encoder.encode(
+      `${prefix}${file.name}`
+    );
+    const data = encoder.encode(file.contents);
+    const crc = crc32(data);
+
+    const local = concatBytes([
+      new Uint8Array([0x50, 0x4b, 0x03, 0x04]),
+      zipUint16(20),
+      zipUint16(0),
+      zipUint16(0),
+      zipUint16(time),
+      zipUint16(day),
+      zipUint32(crc),
+      zipUint32(data.length),
+      zipUint32(data.length),
+      zipUint16(nameBytes.length),
+      zipUint16(0),
+      nameBytes,
+      data
+    ]);
+
+    const central = concatBytes([
+      new Uint8Array([0x50, 0x4b, 0x01, 0x02]),
+      zipUint16(20),
+      zipUint16(20),
+      zipUint16(0),
+      zipUint16(0),
+      zipUint16(time),
+      zipUint16(day),
+      zipUint32(crc),
+      zipUint32(data.length),
+      zipUint32(data.length),
+      zipUint16(nameBytes.length),
+      zipUint16(0),
+      zipUint16(0),
+      zipUint16(0),
+      zipUint16(0),
+      zipUint32(0),
+      zipUint32(offset),
+      nameBytes
+    ]);
+
+    locals.push(local);
+    centrals.push(central);
+    offset += local.length;
+  });
+
+  const centralDirectory = concatBytes(centrals);
+
+  const end = concatBytes([
+    new Uint8Array([0x50, 0x4b, 0x05, 0x06]),
+    zipUint16(0),
+    zipUint16(0),
+    zipUint16(files.length),
+    zipUint16(files.length),
+    zipUint32(centralDirectory.length),
+    zipUint32(offset),
+    zipUint16(0)
+  ]);
+
+  return new Blob(
+    [concatBytes([...locals, centralDirectory, end])],
+    { type: 'application/zip' }
+  );
+}
+
 function svgToPng(page) {
   const image = new Image();
   const url = URL.createObjectURL(
@@ -975,21 +1132,23 @@ elements.gallery.addEventListener(
 elements.allBtn.addEventListener(
   'click',
   () => {
-    currentPages.forEach(
-      (page, index) => {
-        setTimeout(
-          () => {
-            download(
-              svgBlob(page.svg),
-              `${String(index + 1).padStart(
-                2,
-                '0'
-              )}-${slug(page.name)}.svg`
-            );
-          },
-          index * 120
-        );
-      }
+    if (!currentPages.length) {
+      return;
+    }
+
+    const files = currentPages.map(
+      (page, index) => ({
+        name: `${String(index + 1).padStart(
+          2,
+          '0'
+        )}-${slug(page.name)}.svg`,
+        contents: page.svg
+      })
+    );
+
+    download(
+      zipFolder(files, 'org-charts'),
+      'org-charts.zip'
     );
   }
 );
