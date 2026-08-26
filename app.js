@@ -319,7 +319,7 @@ function card(node, x, y, width, height, index) {
     node.responsibility || 'TEAM'
   )
     .toUpperCase()
-    .slice(0, 34);
+    .slice(0, 28);
 
   const staffFooter = staff > 0
     ? `
@@ -371,8 +371,8 @@ function card(node, x, y, width, height, index) {
 
       <text
         x="${x + 22}"
-        y="${y + 52}"
-        font-size="14"
+        y="${y + 54}"
+        font-size="17"
         font-weight="700"
         fill="${accent}"
       >
@@ -389,10 +389,10 @@ function card(node, x, y, width, height, index) {
       )}
 
       ${textLines(
-        wrap(node.title, 40),
+        wrap(node.title, 32),
         x + 22,
         y + 162,
-        14,
+        17,
         '#5d6b85',
         '400'
       )}
