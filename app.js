@@ -40,6 +40,9 @@ const PAGE_HEIGHT = Math.round(
   PAGE_HEIGHT_CM * PX_PER_CM
 );
 
+// Leader banner: name (24), title (16), then this responsibility / subtitle size.
+const LEADER_SUBTITLE_SIZE = 16;
+
 const EXAMPLE = `Yan Wang | SVP, Product | Product strategy, portfolio leadership and enterprise alignment
   Caroline Plancke | EA, Product | Executive operations and coordination
   Sovan Sahu | VP, Data & Analytics | Data strategy, governance, engineering and analytics
@@ -274,14 +277,14 @@ function leaderBanner(node, width, y = 40) {
 
   const x = width * 0.2;
   const bannerWidth = width * 0.6;
-  const bannerHeight = 92;
+  const bannerHeight = 118;
 
   const responsibility = node.responsibility
     ? textLines(
-        wrap(node.responsibility, 70),
+        wrap(node.responsibility, 52),
         x + 20,
-        y + 84,
-        12,
+        y + 86,
+        LEADER_SUBTITLE_SIZE,
         '#dcebea',
         '400'
       )
