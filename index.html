@@ -4,9 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tentacles</title>
+  <!-- Visual styling lives in styles.css; chart drawing and downloads live in app.js -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Top bar: product name plus save / load / generate -->
   <header class="app-header">
     <div>
       <p class="eyebrow">Tentacles 🐙</p>
@@ -14,14 +16,18 @@
       <p class="subtitle">Paste the hierarchy once. Generate a summary plus one detail image per leader.</p>
     </div>
     <div class="header-actions">
+      <!-- Persist the current paste + settings in this browser's localStorage -->
       <button id="saveBtn" class="secondary">Save locally</button>
       <button id="loadBtn" class="secondary">Load saved</button>
+      <!-- Re-runs parse + SVG layout using the textarea and the controls below -->
       <button id="generateBtn" class="primary">Generate charts</button>
     </div>
   </header>
 
   <main class="workspace">
+    <!-- Left column: input and look-and-feel controls -->
     <aside class="panel controls">
+      <!-- 1. Org text: 2-space indent per level, fields split by | -->
       <section>
         <div class="section-title-row">
           <h2>1. Team structure</h2>
@@ -38,9 +44,11 @@
         </details>
       </section>
 
+      <!-- 2. Colors, type, how many report cards fit on one image, and grid columns -->
       <section>
         <h2>2. Brand and layout</h2>
         <div class="field-grid">
+          <!-- Primary fills the green leader banner at the top of each chart -->
           <label>
             Primary
             <span class="color-row">
@@ -49,11 +57,12 @@
             </span>
           </label>
 
+          <!-- Accent 1/2 stripe and numbered header on odd/even white report cards -->
           <label>
             Accent 1
             <span class="color-row">
               <input id="accent1" type="color" value="#9DC6D7" aria-label="Accent 1 color picker">
-              <input id="accent1Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 1 color hex code">
+              <input id="accent1Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 1 hex code">
             </span>
           </label>
 
@@ -61,7 +70,7 @@
             Accent 2
             <span class="color-row">
               <input id="accent2" type="color" value="#9DC6D7" aria-label="Accent 2 color picker">
-              <input id="accent2Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 2 color hex code">
+              <input id="accent2Hex" type="text" value="#9DC6D7" maxlength="7" spellcheck="false" aria-label="Accent 2 hex code">
             </span>
           </label>
 
@@ -84,14 +93,15 @@
           </select>
         </label>
 
+        <!-- How many white report cards appear on one detail/summary image before splitting -->
         <label class="stacked">
           Cards per detail image
           <select id="cardsPerPage">
             <option value="4">4</option>
-            <option value="6" selected>6</option>
+            <option value="6">6</option>
             <option value="8">8</option>
             <option value="10">10</option>
-            <option value="12">12</option>
+            <option value="12" selected>12</option>
           </select>
         </label>
 
@@ -113,12 +123,14 @@
       </section>
     </aside>
 
+    <!-- Right column: status, zip download, and the rendered SVG gallery -->
     <section class="panel output-panel">
       <div class="output-toolbar">
         <div>
           <h2>Generated images</h2>
           <p id="status" class="help">Nothing generated yet.</p>
         </div>
+        <!-- Packs every chart SVG into org-charts.zip (folder of files inside) -->
         <button id="downloadAllBtn" class="secondary" disabled>Download all SVGs as ZIP</button>
       </div>
 
