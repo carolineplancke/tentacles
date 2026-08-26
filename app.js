@@ -282,13 +282,8 @@ function leaderBanner(node, width, y = 40) {
     ? textLines(
         wrap(node.responsibility, 52),
         x + 20,
-<<<<<<< HEAD
-        y + 84,
-        16,
-=======
         y + 86,
         LEADER_SUBTITLE_SIZE,
->>>>>>> 31f41964f1a7bd1fd5787946055c38b9765e8628
         '#dcebea',
         '400'
       )
@@ -304,7 +299,6 @@ function leaderBanner(node, width, y = 40) {
       fill="${currentSettings.primary}"
     />
 
-//Leader Name
     <text
       x="${x + 20}"
       y="${y + 35}"
@@ -314,8 +308,7 @@ function leaderBanner(node, width, y = 40) {
     >
       ${esc(node.name)}
     </text>
-    
-//Leader Job Title
+
     <text
       x="${x + 20}"
       y="${y + 63}"
@@ -353,8 +346,7 @@ function card(node, x, y, width, height, index) {
         y2="${y + height - 78}"
         stroke="#d9e0eb"
       />
-      
-//Staff Reports
+
       <text
         x="${x + 22}"
         y="${y + height - 38}"
@@ -392,8 +384,7 @@ function card(node, x, y, width, height, index) {
         height="12"
         fill="${accent}"
       />
-      
-//Headers of Reports above the name (01 Product) type thing
+
       <text
         x="${x + 22}"
         y="${y + 52}"
