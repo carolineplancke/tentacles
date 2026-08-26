@@ -22,7 +22,6 @@ const elements = {
   perPage: $('#cardsPerPage'),
   cols: $('#columnCount'),
   allDesc: $('#countAllDescendants'),
-
   allBtn: $('#downloadAllBtn')
 };
 
@@ -281,7 +280,7 @@ function leaderBanner(node, width, y = 40) {
         wrap(node.responsibility, 70),
         x + 20,
         y + 84,
-        12,
+        16,
         '#dcebea',
         '400'
       )
@@ -297,21 +296,23 @@ function leaderBanner(node, width, y = 40) {
       fill="${currentSettings.primary}"
     />
 
+//Leader Name
     <text
       x="${x + 20}"
       y="${y + 35}"
       fill="white"
-      font-size="24"
+      font-size="28"
       font-weight="700"
     >
       ${esc(node.name)}
     </text>
-
+    
+//Leader Job Title
     <text
       x="${x + 20}"
       y="${y + 63}"
       fill="white"
-      font-size="16"
+      font-size="18"
     >
       ${esc(node.title)}
     </text>
@@ -344,11 +345,12 @@ function card(node, x, y, width, height, index) {
         y2="${y + height - 78}"
         stroke="#d9e0eb"
       />
-
+      
+//Staff Reports
       <text
         x="${x + 22}"
         y="${y + height - 38}"
-        font-size="13"
+        font-size="14"
         fill="#5d6b85"
       >
         ${staff} Staff Reports
@@ -382,7 +384,8 @@ function card(node, x, y, width, height, index) {
         height="12"
         fill="${accent}"
       />
-
+      
+//Headers of Reports above the name (01 Product) type thing
       <text
         x="${x + 22}"
         y="${y + 52}"
